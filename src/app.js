@@ -1,74 +1,55 @@
 var UI = require('ui');
-var ajax = require('ajax');
+      //var status = data.status;
+      //var message = data.message;
+      //var stations = data.stations;
+      //var busses = data.bussesDispatched;
+      //var duration = data.duration; // Not sure what this does. I'll have to wait until a day when the system reports this
+      //var timestamp = data.timestamp; // Not needed but I need to keep it here to know it exists, since the service is not documented at all
+getData();
 
-var main = new UI.Card({
-  title: 'PRT',
-  icon: 'images/icon.png',
-  body: 'Press Select to check',
+var card = new UI.Card({
+  title: "PRT",
+  icon: "images/icon.png",
+  body: "Fetching data...",
   scrollable: false
 });
 
-main.show();
+card.show();
 
-main.on('click', 'up', function(e) {
+
+card.on('click', 'up', function(e) {
   
 });
 
-main.on('click', 'select', function(e) {
-  checkPrt();
-});
-
-main.on('click', 'down', function(e) {
+card.on('click', 'select', function(e) {
   
 });
 
-
-function checkPrt() {
-  var milliseconds = (new Date()).getTime();
+card.on('click', 'down', function(e) {
   
-  ajax( 
-    {
-      url:'http://prtstatus.wvu.edu/api/'+milliseconds+'/?format=json',
-      type:'json'
-    },
-    
-    function(data) {
-      var status = data.status;
-      var message = data.message;
-      var stations = data.stations;
-      var busses = data.bussesDispatched;
-      var duration = data.duration; // Not sure what this does. I'll have to wait until a day when the system reports this
-      var timestamp = data.timestamp; // Not needed but I need to keep it here to know it exists, since the service is not documented at all
-      
-      if(status == 1) {
-        main.body = 'The PRT is up';
-      } else {
-        
-        var downList = "Down at: ";
-        var busDis;
-        
-        if(message == "The PRT is closed.") {
-          main.body = message;
-        } 
-        else if(busses == 1) {
-          busDis = "Busses have been dspatched";
-          
-          for	(var i = 0; i < stations.length; i++) {
-            downList += stations[i] + ", ";
-          }
-          
-          main.body = message + "\n" + downList + "\n" + busDis;
-        } 
-        else {
-          busDis = "Busses are not dispatched";
-          
-          for	(var i = 0; i < stations.length; i++) {
-            downList += stations[i] + ", ";
-          }
-          
-          main.body = message + "\n" + downList + "\n" + busDis;
-        }
-      }
-    }
-  ); 
+});
+
+function getData() {
+  var time = (new Date()).getTime();
+  var req = new XMLHttpRequest();
+  req.onload = function(e) {
+    var response = JSON.parse(req.responseText);
+    parseInfo(response);
+  };
+  
+  req.open('GET', 'http://prtstatus.wvu.edu/api/'+time+'?format=json', true);
+  req.send();
+}
+
+function parseInfo(data) {
+  var status = data.status;
+  var message = data.message;
+  
+  if(message == "The PRT is closed.") {
+    card.body(message);
+  } else if (status == 1) {
+    card.body("The PRT is up and running");
+  } else {
+    card.body(message);
+  }
 }
